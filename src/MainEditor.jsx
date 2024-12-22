@@ -11,6 +11,7 @@ import {
 import { withHistory } from "slate-history";
 import { Editable, ReactEditor, Slate, withReact } from "slate-react";
 
+// Define markdown-like shortcuts
 const SHORTCUTS = {
   "*": "list-item",
   "-": "list-item",
@@ -23,12 +24,18 @@ const SHORTCUTS = {
   "#####": "heading-five",
   "######": "heading-six",
 };
+
 const MainEditor = () => {
+  // Render custom elements based on their type
   const renderElement = useCallback((props) => <Element {...props} />, []);
+
+  // Initialize the editor with plugins
   const editor = useMemo(
     () => withShortcuts(withReact(withHistory(createEditor()))),
     []
   );
+
+  // Handle input before it is processed by the browser
   const handleDOMBeforeInput = useCallback(
     (e) => {
       queueMicrotask(() => {
@@ -60,6 +67,7 @@ const MainEditor = () => {
     },
     [editor]
   );
+
   return (
     <Slate editor={editor} initialValue={initialValue}>
       <Editable
@@ -72,8 +80,12 @@ const MainEditor = () => {
     </Slate>
   );
 };
+
+// Plugin to handle markdown-like shortcuts
 const withShortcuts = (editor) => {
   const { deleteBackward, insertText } = editor;
+
+  // Override insertText to handle shortcuts
   editor.insertText = (text) => {
     const { selection } = editor;
     if (text.endsWith(" ") && selection && Range.isCollapsed(selection)) {
@@ -114,6 +126,8 @@ const withShortcuts = (editor) => {
     }
     insertText(text);
   };
+
+  // Override deleteBackward to handle block type reset
   editor.deleteBackward = (...args) => {
     const { selection } = editor;
     if (selection && Range.isCollapsed(selection)) {
@@ -148,8 +162,11 @@ const withShortcuts = (editor) => {
       deleteBackward(...args);
     }
   };
+
   return editor;
 };
+
+// Define how different elements should be rendered
 const Element = ({ attributes, children, element }) => {
   switch (element.type) {
     case "block-quote":
@@ -174,6 +191,8 @@ const Element = ({ attributes, children, element }) => {
       return <p {...attributes}>{children}</p>;
   }
 };
+
+// Initial value for the editor
 const initialValue = [
   {
     type: "paragraph",
@@ -208,4 +227,5 @@ const initialValue = [
     ],
   },
 ];
+
 export default MainEditor;
