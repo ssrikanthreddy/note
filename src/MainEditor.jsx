@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useEffect, useCallback, useMemo } from "react";
 import {
   createEditor,
   Editor,
@@ -88,7 +88,6 @@ const MainEditor = () => {
         while (editor.children.length > 0) {
           Transforms.removeNodes(editor, { at: [0] });
         }
-
         // Insert the new content at the start of the editor
         Transforms.insertNodes(editor, content, { at: [0] });
       } else {
@@ -99,9 +98,28 @@ const MainEditor = () => {
     }
   };
 
+  // Auto-load the note on page load
+  useEffect(() => {
+    handleLoad();
+  }, [editor]);
+
   return (
     <div>
-      <Slate editor={editor} initialValue={initialValue}>
+      <Slate
+        editor={editor}
+        initialValue={initialValue}
+        onChange={(value) => {
+          // Detect if there's an AST (document structure) change
+          const isAstChange = editor.operations.some(
+            (op) => op.type !== "set_selection"
+          );
+
+          if (isAstChange) {
+            // Call handleSave to save the updated content
+            handleSave(value);
+          }
+        }}
+      >
         <Editable
           onDOMBeforeInput={handleDOMBeforeInput}
           renderElement={renderElement}
@@ -110,12 +128,12 @@ const MainEditor = () => {
           autoFocus
         />
       </Slate>
-      <div style={{ marginTop: "10px" }}>
+      {/* <div style={{ marginTop: "10px" }}>
         <button onClick={handleSave} style={{ marginRight: "5px" }}>
           Save Note
         </button>
         <button onClick={handleLoad}>Load Note</button>
-      </div>
+      </div> */}
     </div>
   );
 };
@@ -237,31 +255,7 @@ const initialValue = [
     type: "paragraph",
     children: [
       {
-        text: 'The editor gives you full control over the logic you can add. For example, it\'s fairly common to want to add markdown-like shortcuts to editors. So that, when you start a line with "> " you get a blockquote that looks like this:',
-      },
-    ],
-  },
-  {
-    type: "block-quote",
-    children: [{ text: "A wise quote." }],
-  },
-  {
-    type: "paragraph",
-    children: [
-      {
-        text: 'Order when you start a line with "## " you get a level-two heading, like this:',
-      },
-    ],
-  },
-  {
-    type: "heading-two",
-    children: [{ text: "Try it out!" }],
-  },
-  {
-    type: "paragraph",
-    children: [
-      {
-        text: 'Try it out for yourself! Try starting a new line with ">", "-", or "#"s.',
+        text: "Flonote #2349",
       },
     ],
   },
