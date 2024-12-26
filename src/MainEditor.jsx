@@ -11,6 +11,8 @@ import {
 import { withHistory } from "slate-history";
 import { Editable, ReactEditor, Slate, withReact } from "slate-react";
 
+import { saveNote, loadNote } from "./utils/Indexeddb";
+
 // Define markdown-like shortcuts
 const SHORTCUTS = {
   "*": "list-item",
@@ -68,16 +70,53 @@ const MainEditor = () => {
     [editor]
   );
 
+  const handleSave = async () => {
+    try {
+      const content = editor.children; // Get the editor's content
+      await saveNote("note-1", content); // Save content with a unique ID
+    } catch (error) {
+      console.error("Failed to save note:", error);
+    }
+  };
+
+  const handleLoad = async () => {
+    try {
+      const content = await loadNote("note-1"); // Load note by ID
+
+      if (content) {
+        // Remove all existing nodes from the editor
+        while (editor.children.length > 0) {
+          Transforms.removeNodes(editor, { at: [0] });
+        }
+
+        // Insert the new content at the start of the editor
+        Transforms.insertNodes(editor, content, { at: [0] });
+      } else {
+        alert("No saved note found.");
+      }
+    } catch (error) {
+      console.error("Failed to load note:", error);
+    }
+  };
+
   return (
-    <Slate editor={editor} initialValue={initialValue}>
-      <Editable
-        onDOMBeforeInput={handleDOMBeforeInput}
-        renderElement={renderElement}
-        placeholder="Write some markdown..."
-        spellCheck
-        autoFocus
-      />
-    </Slate>
+    <div>
+      <Slate editor={editor} initialValue={initialValue}>
+        <Editable
+          onDOMBeforeInput={handleDOMBeforeInput}
+          renderElement={renderElement}
+          placeholder="Write some markdown..."
+          spellCheck
+          autoFocus
+        />
+      </Slate>
+      <div style={{ marginTop: "10px" }}>
+        <button onClick={handleSave} style={{ marginRight: "5px" }}>
+          Save Note
+        </button>
+        <button onClick={handleLoad}>Load Note</button>
+      </div>
+    </div>
   );
 };
 
