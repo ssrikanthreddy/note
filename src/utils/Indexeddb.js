@@ -63,3 +63,32 @@ export const loadNote = async (id) => {
     request.onerror = (event) => reject(event.target.error);
   });
 };
+
+const clearObjectStore = async (storeName) => {
+  const request = indexedDB.open("SlateNotesDB", 1);
+
+  request.onsuccess = () => {
+    const db = request.result;
+    const transaction = db.transaction(storeName, "readwrite");
+    const store = transaction.objectStore(storeName);
+    const clearRequest = store.clear();
+
+    clearRequest.onsuccess = () => {
+      console.log(`Object store '${storeName}' cleared successfully.`);
+    };
+
+    clearRequest.onerror = (event) => {
+      console.error(
+        `Failed to clear object store '${storeName}':`,
+        event.target.error
+      );
+    };
+  };
+
+  request.onerror = (event) => {
+    console.error("Failed to open IndexedDB:", event.target.error);
+  };
+};
+
+// Call the function
+// clearObjectStore("notes");
